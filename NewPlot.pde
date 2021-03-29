@@ -25,7 +25,7 @@ void setup() {
   // Arduino setup
   String portName = Serial.list()[0];
   new Serial(this, portName, 9600).bufferUntil(ENTER);
-  
+  println(portName);
   graphsDisplay = new  GraphsDisplay(this);
   barCharts = new BarCharts(this);
   statesDisplay = new StatesDisplay();
@@ -68,15 +68,15 @@ void draw(){
  
  
  
- long currentTime, previousTime;
+ float currentTime, previousTime;
  public void update(){
    
   
    //TO add random values 
    currentTime = millis();
-   if(currentTime - previousTime > 1000){
-     
-       
+   if(currentTime - previousTime > 100){
+       currentTime /= 1000.0;
+      
        previousTime = millis();
    }  
  }
@@ -107,6 +107,7 @@ void draw(){
         value = calculateTemp(value);
       }
       
+      // what actualy adds the code on a plot
       graphsDisplay.addValue(plotIndex, layerIndex, new PVector(newTime, value)); 
       }
   }

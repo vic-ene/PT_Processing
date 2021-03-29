@@ -9,7 +9,7 @@ public class GraphsDisplay{
   public static final String  TIME_IN_SECONDS = "Time (seconds)";
   
   public static final int NUMBER_OF_GRAPHS = 3;
-  public static final int INTERVAL = 30;     // numbers of points we can along x axis at once
+  public static final int INTERVAL = 50;     // numbers of points we can along x axis at once
   public static final int PLOT_DX = 400, PLOT_DY = 400;
   public static final int OG_Y_MIN = 25, OG_Y_MAX = 50,
                           ACC_Y_MIN = -80, ACC_Y_MAX = 80;
@@ -129,7 +129,6 @@ public class GraphsDisplay{
        LAYER_3 = Z    purple    
      */
    
-    
     plot3 = new GPlot(this.parent);
     plot3.setPos(plotPos[2][0], plotPos[2][1]);
     plot3.setOuterDim(400 , 400 );
@@ -152,13 +151,11 @@ public class GraphsDisplay{
     /* ----------------------------------------------------------------------------------------------------------------------------------------------------
     -----------------------------------------------------------------------------------------------------------------------------------------------------  */
    
-  
     plots = new ArrayList<GPlot>();
     plots.add(plot1);
     plots.add(plot2);
     plots.add(plot3);
   
-   
   }
   
   
@@ -231,7 +228,8 @@ public class GraphsDisplay{
          if(numberOfPoints - INTERVAL <  0){
            tempPlot.setXLim(0, lastPoint.getX());
          }else{
-           tempPlot.setXLim(lastPoint.getX() - INTERVAL, lastPoint.getX());
+           float lowerX = tempPlot.getPoints().get(numberOfPoints - INTERVAL).getX();
+           tempPlot.setXLim(lowerX, lastPoint.getX());
          }     
       }
     }

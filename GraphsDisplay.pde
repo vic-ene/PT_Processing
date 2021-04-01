@@ -44,7 +44,6 @@ public class GraphsDisplay{
   
   float[][][] plotValues = new float[3][3][3];
   boolean[] moveAroundGraph = {false , false, false};
-  //boolean[] displays = {false, false, false};
   
   private color[][] layerColors = {{color(240,77,77), color(150,77,77), color(220, 130, 160) }, 
                                    {color(100,200,100), color(50,200,50), color(50,250,200)}, 

@@ -1,40 +1,40 @@
 import processing.serial.*;
 
 
-
 private GraphsDisplay graphsDisplay;
-private BarCharts barCharts;  
+private Display3D display3D;  
 private StatesDisplay statesDisplay;
 private MapDisplay mapDisplay;
 
-
-
-
-
-public static final String SEPARATOR = ",";
-
-
-// we use those string to know from which value it comes. 
-public static final int TEMP_COMPONENT = 0,
-                        STRAIN_COMPONENT = 1,
-                        ACC_COMPONENT = 2;
+// we store the values coming from the arduino inside of this file
+PrintWriter valuesFile;
+String valuesFileName = "values.txt";
 
 void setup() {
-  size(1200, 800);
- 
+  
+  
+  size(1200, 800, P3D);
+  
+  
   // Arduino setup
-  String portName = Serial.list()[0];
-  new Serial(this, portName, 9600).bufferUntil(ENTER);
-  println(portName);
+  String portName = Serial.list()[0]; // might need to change the number depending on the computer
+  new Serial(this, portName, 9600).bufferUntil(ENTER); // reads until a line change (ENTER)
+ 
   graphsDisplay = new  GraphsDisplay(this);
-  barCharts = new BarCharts(this);
+  display3D = new Display3D(this, 0,400,400, 400);
   statesDisplay = new StatesDisplay();
   mapDisplay = new MapDisplay(1000,600,400,400);
   
+  // we create the file
+  valuesFile = createWriter(valuesFileName);
 }
 
 
 void draw(){
+  
+
+  
+  
   
   update();
   
@@ -54,13 +54,17 @@ void draw(){
   }
   else{
      graphsDisplay.draw();
-     barCharts.draw();
+     display3D.draw();
      statesDisplay.draw();  
      mapDisplay.draw();
   }
   
  
+
  
+
+  
+
   
   
  
@@ -71,7 +75,6 @@ void draw(){
  float currentTime, previousTime;
  public void update(){
    
-  
    //TO add random values 
    currentTime = millis();
    if(currentTime - previousTime > 100){
@@ -79,38 +82,68 @@ void draw(){
       
        previousTime = millis();
    }  
+  
+   
  }
  
  
+ // separator used with the arduino
+ public static final String SEPARATOR = ",";
+
+
+ // we use those string to know the component type
+ public static final int TEMP_COMPONENT = 0,
+                        STRAIN_COMPONENT = 1,
+                        ACC_COMPONENT = 2;                                          
+                       
+ // This string is used to indentify messages with values from the arduino.
+ // 0,0 corresponds to the first layer of the first plot (Temperature plot)
+ String VALUES_MSG = "0,0";
+ 
+ // This corresponds to the number of attributes sent with each value from the arduino
+ int relevantValues = 4;
+ 
+ 
+ 
+ 
+ 
+ // code that receives message from the arduino
  void serialEvent(final Serial s){
-   
   
-  // We recover the String which contains all values
+  // We recover a string that comes from the arduino
   String val = s.readString();
  
-  // We split it into an array of floats (because many different values).
-  float[] values = float(split(val,SEPARATOR));
-  
-  // This corresponds to the number of attributes sent with each value
-  int relevantValues = 4;
-  
-  if(values[0] == 0 && values[1] == 0 ){
-    for (int i = 0; i < (values.length)/ relevantValues; i++){
-      int plotIndex = int(values[i * relevantValues]);
-      String layerIndex = str(int(values[i * relevantValues + 1]));
-      float value = values[i * relevantValues + 2 ];
-      float newTime = values[i * relevantValues +3 ] / 1000.0;
+  // check the length the prevent error from the susbtring method
+  if(val.length() > 3){
+    if(val.substring(0,3).contentEquals(VALUES_MSG)){
       
-     // println(str(plotIndex) + ", "  + layerIndex + " " + str(value) + " " + str(newTime));
+      // We write the message in the values.txt file
+      valuesFile.println(val);
+      valuesFile.flush();
       
-      if(plotIndex == TEMP_COMPONENT){
-        value = calculateTemp(value);
+      // We split it into an array of floats (because many different values).
+      float[] values = float(split(val,SEPARATOR));
+      
+    
+        for (int i = 0; i < (values.length)/ relevantValues; i++){
+          // we recover all the four values
+          int plotIndex = int(values[i * relevantValues]);
+          String layerIndex = str(int(values[i * relevantValues + 1]));
+          float value = values[i * relevantValues + 2 ];
+          float newTime = values[i * relevantValues +3 ] / 1000.0;
+          
+          // we calculate the temperature which is previously in analog if we are dealing with a temperature sensor
+          if(plotIndex == TEMP_COMPONENT){
+            value = calculateTemp(value);        
+          
+          // what actualy adds the code on a plot
+          graphsDisplay.addValue(plotIndex, layerIndex, new PVector(newTime, value)); 
+        }
       }
-      
-      // what actualy adds the code on a plot
-      graphsDisplay.addValue(plotIndex, layerIndex, new PVector(newTime, value)); 
-      }
+    }
   }
+  
+  
  
   
 }
@@ -130,9 +163,6 @@ void mouseReleased(){
 void keyPressed(){
   graphsDisplay.keyPressed();
 }
-
-
-
 
 
 float factor = 5.0/1024.0;

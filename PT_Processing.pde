@@ -59,23 +59,18 @@ void draw(){
      statesDisplay.draw();  
      mapDisplay.draw();
   }
-  
- 
- 
-  
-  
- 
  }
  
  
  
  long currentTime, previousTime;
+ 
  public void update(){
    
   
    if(addNewValues){
      for(int i = 0; i < newValues.length; i ++){
-       graphsDisplay.addValue((int)newValues[i][0], str((int)newValues[i][1]), new PVector(newValues[i][2], newValues[i][3])); 
+       graphsDisplay.addValue((int)newValues[i][0], str((int)newValues[i][1]), new PVector(newValues[i][3], newValues[i][2])); 
      }  
      addNewValues = false;
    }
@@ -87,6 +82,9 @@ void draw(){
        
        previousTime = millis();
    }  
+   
+   
+  
  }
  
  
@@ -106,11 +104,11 @@ void draw(){
     newValues = new float[numberOfValues][relevantValues];
     
     if(values[0] == 0 && values[1] == 0 ){
-      for (int i = 0; i < relevantValues; i++){
+      for (int i = 0; i < numberOfValues; i++){
         float plotIndex = int(values[i * relevantValues]);
         float layerIndex = int(values[i * relevantValues + 1]);
         float value = values[i * relevantValues + 2 ];
-        float newTime = values[i * relevantValues +3 ] / 1000.0;
+        float newTime = values[i * relevantValues + 3 ] / 1000.0;
         
         if(plotIndex == TEMP_COMPONENT){
           value = calculateTemp(value);
@@ -121,10 +119,10 @@ void draw(){
         newValues[i][2] = value;
         newValues[i][3] = newTime;
         
-        //graphsDisplay.addValue((int)plotIndex, str((int)layerIndex), new PVector(newTime, value)); 
       }
+       addNewValues = true;
     }
-    addNewValues = true;
+   
   }
   
  

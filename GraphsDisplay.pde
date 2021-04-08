@@ -44,6 +44,7 @@ public class GraphsDisplay{
   
   float[][][] plotValues = new float[3][3][3];
   boolean[] moveAroundGraph = {false , false, false};
+  //boolean[] displays = {false, false, false};
   
   private color[][] layerColors = {{color(240,77,77), color(150,77,77), color(220, 130, 160) }, 
                                    {color(100,200,100), color(50,200,50), color(50,250,200)}, 
@@ -128,6 +129,7 @@ public class GraphsDisplay{
        LAYER_3 = Z    purple    
      */
    
+    
     plot3 = new GPlot(this.parent);
     plot3.setPos(plotPos[2][0], plotPos[2][1]);
     plot3.setOuterDim(400 , 400 );
@@ -150,11 +152,13 @@ public class GraphsDisplay{
     /* ----------------------------------------------------------------------------------------------------------------------------------------------------
     -----------------------------------------------------------------------------------------------------------------------------------------------------  */
    
+  
     plots = new ArrayList<GPlot>();
     plots.add(plot1);
     plots.add(plot2);
     plots.add(plot3);
   
+   
   }
   
   
@@ -196,7 +200,7 @@ public class GraphsDisplay{
       drawPlot(i);
     }
     
-     
+    
   }
   
   public void drawPlot(int i){
@@ -227,8 +231,7 @@ public class GraphsDisplay{
          if(numberOfPoints - INTERVAL <  0){
            tempPlot.setXLim(0, lastPoint.getX());
          }else{
-           float lowerLimit = lastPoint.getX() - INTERVAL;
-           tempPlot.setXLim((lowerLimit < 0) ? 0: lowerLimit, lastPoint.getX());
+           tempPlot.setXLim(lastPoint.getX() - INTERVAL, lastPoint.getX());
          }     
       }
     }
@@ -290,11 +293,7 @@ public class GraphsDisplay{
      float y = newPoint.y;
      int layerIndex = int(LAYER_X);
      layer.addPoint(new GPoint(x , y));
-    
-     float [] yLim = plots.get(PLOT_X).getYLim();
-     yLim[0] = (y < yLim[0])? y: yLim[0];
-     yLim[1] = (y > yLim[1])? y: yLim[1];
-     plots.get(PLOT_X).setYLim(yLim);
+  
     
     
     /* Si il n'y avais aucun point (numberOfPoints = 0) on initialise la liste 
@@ -313,6 +312,7 @@ public class GraphsDisplay{
     }
   }
  
+  
   
   
   

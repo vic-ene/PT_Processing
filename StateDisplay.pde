@@ -113,7 +113,6 @@ public class StatesDisplay{
     } 
   }
   
-  
   public void switchState(){
     this.activated = !this.activated;
   }

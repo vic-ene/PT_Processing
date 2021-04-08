@@ -1,0 +1,2 @@
+The "tempPlotValues" array  (in GraphsDisplay file) is used to calcualte the average the max and the min of each plot.
+	To calculate the average we make the total --> We must check it does not exceen max int capacity when it turns for too long. 

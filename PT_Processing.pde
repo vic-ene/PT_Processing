@@ -81,6 +81,7 @@ void draw(){
        currentTime /= 1000.0;
       
        previousTime = millis();
+       graphsDisplay.addValue(0, "0", new PVector(currentTime, random(10,30 + currentTime)));
    }  
   
    

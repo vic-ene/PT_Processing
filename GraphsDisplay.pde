@@ -9,7 +9,7 @@ public class GraphsDisplay{
   public static final String  TIME_IN_SECONDS = "Time (seconds)";
   
   public static final int NUMBER_OF_GRAPHS = 3;
-  public static final int INTERVAL = 50;     // numbers of points we can along x axis at once
+  public static final int INTERVAL = 30;     // numbers of points we can along x axis at once
   public static final int PLOT_DX = 400, PLOT_DY = 400;
   public static final int OG_Y_MIN = 25, OG_Y_MAX = 50,
                           ACC_Y_MIN = -80, ACC_Y_MAX = 80;
@@ -196,7 +196,7 @@ public class GraphsDisplay{
       drawPlot(i);
     }
     
-    
+     
   }
   
   public void drawPlot(int i){
@@ -227,8 +227,8 @@ public class GraphsDisplay{
          if(numberOfPoints - INTERVAL <  0){
            tempPlot.setXLim(0, lastPoint.getX());
          }else{
-           float lowerX = tempPlot.getPoints().get(numberOfPoints - INTERVAL).getX();
-           tempPlot.setXLim(lowerX, lastPoint.getX());
+           float lowerLimit = lastPoint.getX() - INTERVAL;
+           tempPlot.setXLim((lowerLimit < 0) ? 0: lowerLimit, lastPoint.getX());
          }     
       }
     }
@@ -291,6 +291,10 @@ public class GraphsDisplay{
      int layerIndex = int(LAYER_X);
      layer.addPoint(new GPoint(x , y));
     
+     float [] yLim = plots.get(PLOT_X).getYLim();
+     yLim[0] = (y < yLim[0])? y: yLim[0];
+     yLim[1] = (y > yLim[1])? y: yLim[1];
+     plots.get(PLOT_X).setYLim(yLim);
     
     
     /* Si il n'y avais aucun point (numberOfPoints = 0) on initialise la liste 
@@ -309,7 +313,6 @@ public class GraphsDisplay{
     }
   }
  
-  
   
   
   

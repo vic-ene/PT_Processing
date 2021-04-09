@@ -9,8 +9,13 @@ private MapDisplay mapDisplay;
 
 
 
+String val;
 public float[][] newValues;
 public boolean addNewValues = false;
+
+
+PrintWriter file;
+String filename = "values.txt";
 
 public static final String SEPARATOR = ",";
 
@@ -24,13 +29,16 @@ void setup() {
   size(1200, 800);
  
   // Arduino setup
-  String portName = Serial.list()[0];
+  String portName = Serial.list()[1];
   new Serial(this, portName, 9600).bufferUntil(ENTER);
   
   graphsDisplay = new  GraphsDisplay(this);
   barCharts = new BarCharts(this);
   statesDisplay = new StatesDisplay();
   mapDisplay = new MapDisplay(1000,600,400,400);
+  
+  val = "";
+  file = createWriter(filename);
   
 }
 
@@ -63,11 +71,13 @@ void draw(){
  
  
  
- long currentTime, previousTime;
+ float currentTime, previousTime;
  
  public void update(){
    
-  
+  /* we add the values onto the graphs
+   we do this in the update look to avoid asynchronous problems inside of the serialEvent method
+   DO NOT do this inside of the serialEvent method --> (drawing problems) !!!  */
    if(addNewValues){
      for(int i = 0; i < newValues.length; i ++){
        graphsDisplay.addValue((int)newValues[i][0], str((int)newValues[i][1]), new PVector(newValues[i][3], newValues[i][2])); 
@@ -75,55 +85,82 @@ void draw(){
      addNewValues = false;
    }
    
+   // Save values inside a txt file (will be used on excel afterwards)
+   if(!val.contentEquals("")){ 
+      file.println(val);
+      file.flush();
+   }
+   val = "";
+  
    
+   /*
    //TO add random values 
    currentTime = millis();
-   if(currentTime - previousTime > 1000){
+   if(currentTime - previousTime > 500){
+       currentTime /= 1000.0;
+       
+       graphsDisplay.addValue(0, "0", new PVector(currentTime, random(10,30) + currentTime));
        
        previousTime = millis();
    }  
+   
+   */
    
    
   
  }
  
  
+// SHARED OR USED WITH THE ARDUINO TO RECOVER DATA
+int relevantValues = 4;
+String VAL = "VAL";
+
+ 
  void serialEvent(final Serial s){
    
   // We recover the String which contains all values
-  String val = s.readString();
- 
-  // We split it into an array of floats (because many different values).
-  float[] values = float(split(val,SEPARATOR));
+  val = s.readString();
   
-  
-  if(!addNewValues){
-    int relevantValues = 4;
-    int numberOfValues = values.length / relevantValues;
+  // we check the first 3 letters to know the command
+  if(val.length() >= 3){
+    // we recover the command which is stored in the first 3 letters
+    String cmd = val.substring(0,3);
     
-    newValues = new float[numberOfValues][relevantValues];
-    
-    if(values[0] == 0 && values[1] == 0 ){
-      for (int i = 0; i < numberOfValues; i++){
-        float plotIndex = int(values[i * relevantValues]);
-        float layerIndex = int(values[i * relevantValues + 1]);
-        float value = values[i * relevantValues + 2 ];
-        float newTime = values[i * relevantValues + 3 ] / 1000.0;
+    // If it contains values from the arduino
+    if(cmd.contentEquals(VAL)){
+      val = val.substring(3);
+      // We split it into an array of floats (because many different values).
+      float[] values = float(split(val,SEPARATOR));
+      
+      // to avoid problems with the drawing (because asynchronous)
+      if(!addNewValues){
+        int numberOfValues = values.length / relevantValues;
+        newValues = new float[numberOfValues][relevantValues];
         
-        if(plotIndex == TEMP_COMPONENT){
-          value = calculateTemp(value);
+        for (int i = 0; i < numberOfValues; i++){
+          float plotIndex = int(values[i * relevantValues]);
+          float layerIndex = int(values[i * relevantValues + 1]);
+          float value = values[i * relevantValues + 2 ];
+          float newTime = values[i * relevantValues + 3 ] / 1000.0;
+          
+          if(plotIndex == TEMP_COMPONENT){
+            value = calculateTemp(value);
+          }
+          
+          newValues[i][0] = plotIndex;
+          newValues[i][1] = layerIndex;
+          newValues[i][2] = value;
+          newValues[i][3] = newTime;         
         }
-        
-        newValues[i][0] = plotIndex;
-        newValues[i][1] = layerIndex;
-        newValues[i][2] = value;
-        newValues[i][3] = newTime;
-        
-      }
-       addNewValues = true;
+         addNewValues = true;
+      }    
+      
     }
    
+    
   }
+  
+  
   
  
   

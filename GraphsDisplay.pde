@@ -40,6 +40,7 @@ public class GraphsDisplay{
   
   ArrayList<GPlot> plots;
   int[][] plotPos = {{0, 0}, {400, 0}, {800, 0}};
+  String[][] sensorUsage = new String[3][3];
   String[] plotUnits = {" °C", " N", " m/s^2" }; 
   
   float[][][] plotValues = new float[3][3][3];
@@ -85,6 +86,10 @@ public class GraphsDisplay{
     plot1.addLayer(LAYER_3, new GPointsArray());
     plot1.getLayer(LAYER_3).setPointColor(layerColors[0][2]);
     
+    sensorUsage[0][0] = "TBody";
+    sensorUsage[0][1] = "THead";
+    sensorUsage[0][2] = "TFin";
+    
     /* ----------------------------------------------------------------------------------------------------------------------------------------------------
     -----------------------------------------------------------------------------------------------------------------------------------------------------  */
    
@@ -117,6 +122,10 @@ public class GraphsDisplay{
     plot2.addLayer(LAYER_3, new GPointsArray());
     plot2.getLayer(LAYER_3).setPointColor(layerColors[1][2]);
     
+    sensorUsage[1][0] = "Strain Body";
+    sensorUsage[1][1] = "Strain Head";
+    sensorUsage[1][2] = "Strain Fin";
+    
     /* ----------------------------------------------------------------------------------------------------------------------------------------------------
     -----------------------------------------------------------------------------------------------------------------------------------------------------  */
    
@@ -148,6 +157,10 @@ public class GraphsDisplay{
     plot3.getLayer(LAYER_2).setPointColor(layerColors[2][1]);
     plot3.addLayer(LAYER_3, new GPointsArray());
     plot3.getLayer(LAYER_3).setPointColor(layerColors[2][2]);
+    
+    sensorUsage[1][0] = "Acc Body";
+    sensorUsage[1][1] = "Acc Head";
+    sensorUsage[1][2] = "Acc Fin";
     
     /* ----------------------------------------------------------------------------------------------------------------------------------------------------
     -----------------------------------------------------------------------------------------------------------------------------------------------------  */
@@ -186,7 +199,8 @@ public class GraphsDisplay{
             fill(layerColors[priorityIndex][i]);
             text("Average: " + str(plotValues[priorityIndex][i][0] / numberOfPoints), xb,yb  + 1 * yb1 + i * yb2);
             text("Max: " + str(plotValues[priorityIndex][i][1]), xb,yb  + 2 * yb1 + i * yb2);
-            text("Min: " + str(plotValues[priorityIndex][i][2]), xb,yb  + 3 * yb1 + i * yb2);        
+            text("Min: " + str(plotValues[priorityIndex][i][2]), xb,yb  + 3 * yb1 + i * yb2);      
+            text("Location: " + sensorUsage[priorityIndex][i], xb, yb + 4 * yb1 + i * yb2);
           }
         }
       }
@@ -205,17 +219,14 @@ public class GraphsDisplay{
   
   public void drawPlot(int i){
       GPlot tempPlot = plots.get(i);
-     // if(!displays[i]){
-         tempPlot.beginDraw();
-         tempPlot.drawBox();
-         tempPlot.drawXAxis();
-         tempPlot.drawYAxis();
-         tempPlot.drawTitle();
-         tempPlot.drawPoints();
-         tempPlot.drawLines();
-         tempPlot.endDraw();
-    //  } 
-
+       tempPlot.beginDraw();
+       tempPlot.drawBox();
+       tempPlot.drawXAxis();
+       tempPlot.drawYAxis();
+       tempPlot.drawTitle();
+       tempPlot.drawPoints();
+       tempPlot.drawLines();
+       tempPlot.endDraw();
   }
  
   
@@ -231,7 +242,8 @@ public class GraphsDisplay{
          if(numberOfPoints - INTERVAL <  0){
            tempPlot.setXLim(0, lastPoint.getX());
          }else{
-           tempPlot.setXLim(lastPoint.getX() - INTERVAL, lastPoint.getX());
+           float lowerLimit = lastPoint.getX() - INTERVAL;
+           tempPlot.setXLim((lowerLimit < 0) ? 0: lowerLimit, lastPoint.getX());
          }     
       }
     }
@@ -294,6 +306,10 @@ public class GraphsDisplay{
      int layerIndex = int(LAYER_X);
      layer.addPoint(new GPoint(x , y));
   
+     float [] yLim = plots.get(PLOT_X).getYLim();
+     yLim[0] = (y < yLim[0])? y: yLim[0];
+     yLim[1] = (y > yLim[1])? y: yLim[1];
+     plots.get(PLOT_X).setYLim(yLim);
     
     
     /* Si il n'y avais aucun point (numberOfPoints = 0) on initialise la liste 

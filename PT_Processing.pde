@@ -96,11 +96,18 @@ void draw(){
    /*
    //TO add random values 
    currentTime = millis();
+<<<<<<< HEAD
+   if(currentTime - previousTime > 1000){
+       currentTime /= 1000.0;
+=======
    if(currentTime - previousTime > 500){
        currentTime /= 1000.0;
        
        graphsDisplay.addValue(0, "0", new PVector(currentTime, random(10,30) + currentTime));
+>>>>>>> 3fb8f56ccd4e83e3c4f0bfd53b5317a9b104e335
        
+     
+     
        previousTime = millis();
    }  
    

@@ -2,54 +2,75 @@ import processing.serial.*;
 
 
 
-private GraphsDisplay graphsDisplay;
-private BarCharts barCharts;  
-private StatesDisplay statesDisplay;
-private MapDisplay mapDisplay;
+public GraphsDisplay graphsDisplay;
+public RocketDisplay rocketDisplay;  
+public StatesDisplay statesDisplay;
+public MapDisplay mapDisplay;
 
 
 
-String val;
-public float[][] newValues;
-public boolean addNewValues = false;
 
-
-PrintWriter file;
-String filename = "values.txt";
+static float factor = 5.0/1024.0;
+static float HT = 150.0, LT = -50.0;
 
 public static final String SEPARATOR = ",";
-
 
 // we use those string to know from which value it comes. 
 public static final int TEMP_COMPONENT = 0,
                         STRAIN_COMPONENT = 1,
                         ACC_COMPONENT = 2;
 
+Serial myport;
+PrintWriter file;
+String filename = "values.txt";
+
+
+static int relevantValues = 4;
+static int numberOfValues = 6;
+
+
+long addedValues = 0;
+int parasiteValues = numberOfValues * 7 + 1;
+
+
+
 void setup() {
-  size(1200, 800);
- 
-  // Arduino setup
-  String portName = Serial.list()[1];
-  new Serial(this, portName, 9600).bufferUntil(ENTER);
   
+   size(1200, 800, P3D);
+   frameRate(60);
+ 
+  
+ 
+  //size(1200, 800);
+  
+ 
   graphsDisplay = new  GraphsDisplay(this);
-  barCharts = new BarCharts(this);
+  rocketDisplay = new RocketDisplay(this);
   statesDisplay = new StatesDisplay();
   mapDisplay = new MapDisplay(1000,600,400,400);
   
-  val = "";
+  statesDisplay.damageState.switchState();
+  
   file = createWriter(filename);
   
+  // Arduino setup
+  String portName = Serial.list()[1];
+  myport = new Serial(this, portName, 9600);
+  myport.bufferUntil('\n');
+  
+
+ 
+ 
 }
 
 
 void draw(){
-  
+
   update();
   
   // Draws the background and the lines
   if(!graphsDisplay.priority){
-     background(255);
+     background(230,242,255);
      fill(0);
      line(width/3,0,width/3,height);
      line(2 * width/3,0, 2 * width/3,height);
@@ -63,116 +84,74 @@ void draw(){
   }
   else{
      graphsDisplay.draw();
-     barCharts.draw();
+     rocketDisplay.draw();
      statesDisplay.draw();  
      mapDisplay.draw();
   }
+
  }
  
  
- 
- float currentTime, previousTime;
+
  
  public void update(){
    
-  /* we add the values onto the graphs
-   we do this in the update look to avoid asynchronous problems inside of the serialEvent method
-   DO NOT do this inside of the serialEvent method --> (drawing problems) !!!  */
-   if(addNewValues){
-     for(int i = 0; i < newValues.length; i ++){
-       graphsDisplay.addValue((int)newValues[i][0], str((int)newValues[i][1]), new PVector(newValues[i][3], newValues[i][2])); 
-     }  
-     addNewValues = false;
-   }
-   
-   // Save values inside a txt file (will be used on excel afterwards)
-   if(!val.contentEquals("")){ 
-      file.println(val);
-      file.flush();
-   }
-   val = "";
-  
-   
    /*
-   //TO add random values 
-   currentTime = millis();
-<<<<<<< HEAD
-   if(currentTime - previousTime > 1000){
-       currentTime /= 1000.0;
-=======
-   if(currentTime - previousTime > 500){
-       currentTime /= 1000.0;
-       
-       graphsDisplay.addValue(0, "0", new PVector(currentTime, random(10,30) + currentTime));
->>>>>>> 3fb8f56ccd4e83e3c4f0bfd53b5317a9b104e335
-       
-     
-     
-       previousTime = millis();
-   }  
-   
+   if(myport.available() > 0){
+     readDataFromArduino();
+   }
    */
-   
    
   
  }
  
- 
-// SHARED OR USED WITH THE ARDUINO TO RECOVER DATA
-int relevantValues = 4;
-String VAL = "VAL";
-
- 
- void serialEvent(final Serial s){
-   
-  // We recover the String which contains all values
-  val = s.readString();
+ void readDataFromArduino(){
+   // We recover the String which contains all values
+  String val = myport.readStringUntil('\n');
   
-  // we check the first 3 letters to know the command
-  if(val.length() >= 3){
-    // we recover the command which is stored in the first 3 letters
-    String cmd = val.substring(0,3);
+  if(val == null) return;
+  
+  // We split it into an array of floats (because many different values).
+  float[] values = float(split(val,SEPARATOR));
+  // We check if values has the right length (problems can occur when code just launched)
+  int goodNumberOfValues = relevantValues * numberOfValues;
+  
+  /*
+  s("------------------------------------------------");
+  println(values.length + " length of the array with values: should be " + goodNumberOfValues);
+  println(val);
+  */
+  
+  
+  
+  if(values.length == goodNumberOfValues){
     
-    // If it contains values from the arduino
-    if(cmd.contentEquals(VAL)){
-      val = val.substring(3);
-      // We split it into an array of floats (because many different values).
-      float[] values = float(split(val,SEPARATOR));
-      
-      // to avoid problems with the drawing (because asynchronous)
-      if(!addNewValues){
-        int numberOfValues = values.length / relevantValues;
-        newValues = new float[numberOfValues][relevantValues];
-        
+    if(values[0] == 0 && values[1] == 0){
         for (int i = 0; i < numberOfValues; i++){
           float plotIndex = int(values[i * relevantValues]);
           float layerIndex = int(values[i * relevantValues + 1]);
           float value = values[i * relevantValues + 2 ];
           float newTime = values[i * relevantValues + 3 ] / 1000.0;
-          
+        
           if(plotIndex == TEMP_COMPONENT){
-            value = calculateTemp(value);
+           value = calculateTemp(value);
           }
           
-          newValues[i][0] = plotIndex;
-          newValues[i][1] = layerIndex;
-          newValues[i][2] = value;
-          newValues[i][3] = newTime;         
-        }
-         addNewValues = true;
-      }    
-      
-    }
-   
-    
-  }
-  
-  
-  
+          // make sure no parasite values
+          addedValues++;
+          if(addedValues >= parasiteValues){
+              if(addedValues == parasiteValues){
+                statesDisplay.remoteConnectionState.switchState();
+              }
+              graphsDisplay.addValue((int)plotIndex, str((int)layerIndex), new PVector(newTime, value));
+              file.println(val);
+              file.flush();
+          }
+        }  
+     }
+   }  
+ }
  
-  
-}
-
 
 
 void mousePressed(){
@@ -190,28 +169,8 @@ void keyPressed(){
 }
 
 
-
-
-
-float factor = 5.0/1024.0;
-float HT = 150.0, LT = -50.0;
-
 float calculateTemp(float portValue){
   return portValue * factor * (HT - LT)  + LT;
-}
-
-
-float calculateStrain(float portValue1, float portValue2){
-  return portValue1 + portValue2; 
-}
-
-
-public float[] convertStringArrayToFloat(String[] stringArray){
-  float[] floatArray = new float[stringArray.length];
-  for(int i = 0; i < floatArray.length; i ++){
-    floatArray[i] = float(stringArray[i]);
-  }
-  return floatArray; 
 }
 
 public int sign(int nbr){
@@ -220,8 +179,4 @@ public int sign(int nbr){
 
 public boolean mouseOver(int x, int y, int dx, int dy){
   return mouseX > x && mouseX < x + dx && mouseY >y && mouseY < y + dy;
-}
-
-public GPoint generateRandomPoint(float lowerY, float upperY){
-  return new GPoint(millis() / 1000.0, random(lowerY, upperY));
 }

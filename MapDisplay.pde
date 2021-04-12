@@ -23,8 +23,20 @@ public class MapDisplay{
                objectColor = color(200,100,50),
                targetColor = color(20,200,50);
                
+  private PImage  mapImage;
+
+ 
+  
+  public float finalX = 0.00;
+  public float finalY = 0.00;
+  public float finalZ = 0.00;
+  public float finalVx = 0.00;
+  public float finalVy = 0.00;
+  public float finalVz = 0.00;
   
   public MapDisplay(int ogx, int ogy, int dx, int dy){
+   
+    
      this.ogx = ogx;
      this.ogy = ogy;
      this.dx = dx;
@@ -37,26 +49,40 @@ public class MapDisplay{
      object = new PVector(ogx, ogy, 0);
      target = new PVector(ogx, ogy, 0);
      velocity = new PVector(0, 0, 0);
+     
+     mapImage = loadImage("map.png");
+     
+       
+  
+    
    
   }
   
   public void draw(){
-    
+  
     update();
     
+    int tz = 1;
+    translate(0,0,tz);
+   
+    stroke(200);
+    fill(230,242,255);
+    image(mapImage, ogx - dx/2, ogy - dy/2, dx, dy );
+    
     textSize(fontSize);
-    fill(mapColor);
-    circle(ogx, ogy, diameter);
     
     if(drawTarget){
+        translate(0,0,tz);
         fill(targetColor);
         circle(target.x, target.y, smalldiameter);
     }
    
     
+    translate(0,0,tz);
     fill(originColor);
     circle(origin.x, origin.y, smalldiameter);
     
+    translate(0,0,tz);
     fill(objectColor);
     circle(object.x, object.y, smalldiameter);
     
@@ -64,22 +90,34 @@ public class MapDisplay{
     
     if(showBox){
        fill(255);
+       translate(0,0,tz);
        rect(object.x - boxSizeX / 2, object.y - (boxSizeY + boxOffsetY), boxSizeX, boxSizeY);
        PVector dist = getDistanceAsVector();
        fill(0);
+       translate(0,0,tz);
        text("x: " + (int)dist.x + "m", object.x - boxSizeX / 2 + textBoxOffsetX, object.y - boxSizeY);
        text("y: " + (int)dist.y + "m", object.x - boxSizeX / 2 + textBoxOffsetX, object.y - boxSizeY + textBoxGap * 1 );
        text("z: " + (int)dist.z + "m", object.x - boxSizeX / 2 + textBoxOffsetX, object.y - boxSizeY + textBoxGap * 2 );
        text("total: " + (int)getDistance() + "m", object.x - boxSizeX / 2 + textBoxOffsetX, object.y - boxSizeY + textBoxGap * 3 );
     }
-   
     
-     
+    translate(0,0,-6*tz);
+   
+       
      
   }
   
   
   public void update(){
+      
+     finalX = rocketDisplay.finalX4;
+     finalY = rocketDisplay.finalY1;
+     finalZ = rocketDisplay.finalZ4;
+     finalVx = rocketDisplay.finalVx4;
+     finalVy = rocketDisplay.finalVy1;
+     finalVz = rocketDisplay.finalVz4;
+        
+    
      randomCounter++;
      if(randomCounter > randomizer){
        randomizer = (int)random(MAX_RANDOMIZER);

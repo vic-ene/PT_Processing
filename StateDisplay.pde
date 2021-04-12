@@ -1,21 +1,21 @@
 
 public class StatesDisplay{
-  private StateDisplay parachuteState, remoteConnectionState, damageState;
+  public StateDisplay parachuteState, remoteConnectionState, damageState;
    
   ArrayList<StateDisplay> statesDisplay; 
    
-   
+    
   public StatesDisplay(){
     int yb = 375, xb = 460, offsetY1 = 75;
     int ys = 75, xs = 230;
     int size = 50;
     parachuteState = new StateDisplay(xb, yb  + offsetY1 + ys * 1,size,size);
-    parachuteState.setStates("Parachute Deployed: YES", "Parachutes Deployed");
+    parachuteState.setStates("Parachute Deployed: NO", "Parachute Deployed: YES");
     remoteConnectionState = new StateDisplay(xb, yb + offsetY1 + ys * 2,size,size);
-    remoteConnectionState.setStates("Data Transimission: ON", "Transmisson Problem");
+    remoteConnectionState.setStates("No Data Transmission", "Data Transimission: ON" );
     //remoteConnectionState.setColor(color(0,150,150), color(150,0,150));
     damageState = new StateDisplay(xb, yb + offsetY1 + ys * 3, size,size);
-    damageState.setStates("Structural Problems: NONE", "Damage Detected");
+    damageState.setStates("Damage Detected","Structural Problems: NONE");
     //damageState.setColor(color(0,0,255),color(255,125,0));
     
     statesDisplay = new ArrayList<StateDisplay>();

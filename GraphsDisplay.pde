@@ -48,7 +48,7 @@ public class GraphsDisplay{
   //boolean[] displays = {false, false, false};
   
   private color[][] layerColors = {{color(240,77,77), color(150,77,77), color(220, 130, 160) }, 
-                                   {color(100,200,100), color(50,200,50), color(50,250,200)}, 
+                                   {color(180,220,100), color(50,200,50), color(50,250,200)}, 
                                    {color(40,200,200), color(70,177,250), color(150,100,150) }};
 
   private int invisibleColorInt = 16777215, originalLineColor = -1778384896;
@@ -158,9 +158,9 @@ public class GraphsDisplay{
     plot3.addLayer(LAYER_3, new GPointsArray());
     plot3.getLayer(LAYER_3).setPointColor(layerColors[2][2]);
     
-    sensorUsage[1][0] = "Acc Body";
-    sensorUsage[1][1] = "Acc Head";
-    sensorUsage[1][2] = "Acc Fin";
+    sensorUsage[2][0] = "Acc X";
+    sensorUsage[2][1] = "Acc Y";
+    sensorUsage[2][2] = "Acc Z";
     
     /* ----------------------------------------------------------------------------------------------------------------------------------------------------
     -----------------------------------------------------------------------------------------------------------------------------------------------------  */
@@ -177,18 +177,23 @@ public class GraphsDisplay{
   
   public void draw(){
    
+    
+   
  
     // when we only draw one plot in fullscreen
     if(priority){
+     
       fill(255);
       rect(0, 0, width, height);
       update(priorityIndex);
       drawPlot(priorityIndex);
       
+      translate(0,0,1);
       fill(130,190,220);
       rect(hbx,hby,hbdx,hbdy);
       if(showValues){
         fill(255);
+        translate(0,0,1);
         rect(0,0, 300, height);
         fill(0);
         int xb = 20, yb = 100, yb1 = 30, yb2 = 250;
@@ -204,15 +209,19 @@ public class GraphsDisplay{
           }
         }
       }
+      translate(0,0,-2);
       return;
     
     }
+    
     
     // when we draw all the plots
     for(int i = 0; i < plots.size(); i ++){
       update(i);
       drawPlot(i);
     }
+    
+   
     
     
   }
@@ -294,7 +303,11 @@ public class GraphsDisplay{
   
   
   public void addValue(int PLOT_X, String LAYER_X, PVector newPoint){
- 
+    // exit if there was a problem with the arduino;
+   if(PLOT_X < 0 || PLOT_X > 3 || int(LAYER_X) < 0 || int(LAYER_X) > 3) return; 
+    
+    //println(str(PLOT_X) + " " + LAYER_X + " " + str(newPoint.x) + " " + str(newPoint.y) + " added");
+    
      // We find the right plot and the right layer
     GLayer layer = getLayer(PLOT_X, LAYER_X);
     // on count the number of points

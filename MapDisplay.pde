@@ -7,7 +7,7 @@ public class MapDisplay{
   public static final int TARGET_DISTANCE = 50;
   public static final int MAX_RANDOMIZER = 30;
   
-  public boolean drawTarget, showBox = true;
+  public boolean drawTarget = true, showBox = true;
   
   public PVector origin, object, target, velocity, distance;
 
@@ -25,14 +25,24 @@ public class MapDisplay{
                
   private PImage  mapImage;
 
- 
-  
+
   public float finalX = 0.00;
   public float finalY = 0.00;
   public float finalZ = 0.00;
   public float finalVx = 0.00;
   public float finalVy = 0.00;
   public float finalVz = 0.00;
+  
+ 
+  int fixX = 150;
+  int fixY = 0;
+  int fixZ = 0;
+  int finalFixX = 150;
+  int finalFixY = 0;
+  int finalFixZ = 1100;
+  
+  int tempCount = 0;
+  int TEMP = (int)random(30,120);
   
   public MapDisplay(int ogx, int ogy, int dx, int dy){
    
@@ -45,9 +55,9 @@ public class MapDisplay{
      this.y = ogy -dy / 2;
      this.diameter = (dx + dy) / 2 - 1;
      
-     origin = new PVector(ogx, ogy, 0);
-     object = new PVector(ogx, ogy, 0);
-     target = new PVector(ogx, ogy, 0);
+     origin = new PVector(ogx - fixX, ogy - fixY, 0);
+     object = new PVector(origin.x, origin.y, origin.z);
+     target = new PVector(ogx + finalFixX, ogy + finalFixY, finalFixZ);
      velocity = new PVector(0, 0, 0);
      
      mapImage = loadImage("map.png");
@@ -66,7 +76,7 @@ public class MapDisplay{
     translate(0,0,tz);
    
     stroke(200);
-    fill(230,242,255);
+    fill(backgroundColor);
     image(mapImage, ogx - dx/2, ogy - dy/2, dx, dy );
     
     textSize(fontSize);
@@ -103,8 +113,6 @@ public class MapDisplay{
     
     translate(0,0,-6*tz);
    
-       
-     
   }
   
   
@@ -116,24 +124,55 @@ public class MapDisplay{
      finalVx = rocketDisplay.finalVx4;
      finalVy = rocketDisplay.finalVy1;
      finalVz = rocketDisplay.finalVz4;
-        
-    
-     randomCounter++;
-     if(randomCounter > randomizer){
-       randomizer = (int)random(MAX_RANDOMIZER);
-       randomCounter = 0;
-       moveObject(true);
-       
+     
+     
+     tempCount ++;
+     
+     float timeFactor = deploymentTimer / DEPLOY_TIME;
+     if(timeFactor < 1){
+       finalFixY += random(-2, 2);
+       float traveledDistX = timeFactor * (finalFixX + fixX);
+       float traveledDistY = timeFactor * (finalFixY + fixY);
+       float traveledDistZ = timeFactor * (finalFixZ + fixZ);
+       object.set(origin.x + traveledDistX, origin.y + traveledDistY, origin.z + traveledDistZ);
      }
-     if(sameVector(target, object)){
-         moveObject(true);
-     }else{
-       if(PVector.dist(object, target) < ROUND_UP_DISTANCE){
-         object.set(target.x, target.y, target.z);
-         moveObject(true);     
-       }
-     object.add(velocity);        
-     }   
+     else{
+       if(tempCount > TEMP){
+          int TEMP = (int)random(30,120);
+          moveObjectTemp(true);
+       }     
+       object.add(velocity);   
+       if(object.z < 0) object.z = 0;
+     }
+  }
+  
+
+  
+  
+  public void moveObjectTemp(boolean around){
+     createNewTarget(around);
+     createNewVelocity(); 
+     velocity.sub(0,0, velocity.z);
+     if(around){
+       drawTarget = false;
+        while(PVector.dist(new PVector(target.x, target.y, 0), new PVector(ogx + finalFixX, ogy + finalFixY, 0)) > TARGET_DISTANCE ){
+          createNewTargetTemp(around);
+          createNewVelocity();  
+          velocity.sub(0,0, velocity.z);       
+        }
+     }
+  }
+ 
+ 
+   public void createNewTargetTemp(boolean around){
+     float angle = random(360);
+     if(around){
+        target.x = ((cos(radians(angle))) * TARGET_DISTANCE) * random(1) + object.x;
+        target.y = ((sin(radians(angle))) * TARGET_DISTANCE) * random(1) + object.y;
+        velocity.z = 0;
+        target.z -= 2;
+        object.z -= 2;       
+     } 
   }
   
   public void moveObject(boolean around){
@@ -162,6 +201,27 @@ public class MapDisplay{
     
   }
   
+    
+ void moveRandomly(){
+  
+     randomCounter++;
+     if(randomCounter > randomizer){
+       randomizer = (int)random(MAX_RANDOMIZER);
+       randomCounter = 0;
+       moveObject(true);
+       
+     }
+     if(sameVector(target, object)){
+         moveObject(true);
+     }else{
+       if(PVector.dist(object, target) < ROUND_UP_DISTANCE){
+         object.set(target.x, target.y, target.z);
+         moveObject(true);     
+       }
+     object.add(velocity);        
+     }   
+ }
+  
   public void createNewVelocity(){
     velocity = new PVector((target.x - object.x) / ARRIVAL_STEPS,
                               (target.y - object.y) / ARRIVAL_STEPS,
@@ -169,6 +229,8 @@ public class MapDisplay{
                );
          
   }
+  
+  
   
   public boolean sameVector(PVector v1, PVector v2){
      if(v1.x == v2.x){

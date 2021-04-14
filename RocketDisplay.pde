@@ -158,15 +158,18 @@ void draw(){
     
     if (a == 0){
       rx += random(-1,1)/1000.0;
-      ry += 0.005*millis()/500.0;
-      rz += random(-1,1.2)/100.0;}
-      if ((millis() > 25000) && a != 1){
+      ry += 0.0005*millis()/500.0;
+      rz += random(-1,1.2)/100.0;
+      float zLim = 0.75;
+      if(rz > zLim) rz = zLim;
+      if (deploymentTimer > (DEPLOY_TIME) && a != 1){
         a = 1;
         statesDisplay.parachuteState.switchState();
       }
-      if(a == 1){
-      rz += random(-1.0,0.5)/5.0*rz + random(-0.02,0.03);
-      ry = random(-0.15,0.15);
+    }
+     if(a == 1){
+        rz += random(-1.0,0.5)/10.0*rz + random(-0.02,0.03);
+        ry = random(-0.15,0.15);
     }
    
  

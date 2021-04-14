@@ -8,11 +8,6 @@ public StatesDisplay statesDisplay;
 public MapDisplay mapDisplay;
 
 
-
-
-static float factor = 5.0/1024.0;
-static float HT = 150.0, LT = -50.0;
-
 public static final String SEPARATOR = ",";
 
 // we use those string to know from which value it comes. 
@@ -20,17 +15,26 @@ public static final int TEMP_COMPONENT = 0,
                         STRAIN_COMPONENT = 1,
                         ACC_COMPONENT = 2;
 
+static float factor = 5.0/1024.0;
+static float HT = 150.0, LT = -50.0;
+
+public float deploymentTimer;
+public float DEPLOY_TIME = 25000;
+public float renderBegin = 0;
+
+color backgroundColor = color(230,242,255);
+
 Serial myport;
 PrintWriter file;
 String filename = "values.txt";
 
-
 static int relevantValues = 4;
 static int numberOfValues = 6;
 
-
 long addedValues = 0;
 int parasiteValues = numberOfValues * 7 + 1;
+
+
 
 
 
@@ -39,10 +43,9 @@ void setup() {
    size(1200, 800, P3D);
    frameRate(60);
  
-  
  
-  //size(1200, 800);
-  
+ 
+ 
  
   graphsDisplay = new  GraphsDisplay(this);
   rocketDisplay = new RocketDisplay(this);
@@ -65,12 +68,14 @@ void setup() {
 
 
 void draw(){
+  
+  
 
   update();
   
   // Draws the background and the lines
   if(!graphsDisplay.priority){
-     background(230,242,255);
+     background(backgroundColor);
      fill(0);
      line(width/3,0,width/3,height);
      line(2 * width/3,0, 2 * width/3,height);
@@ -88,7 +93,6 @@ void draw(){
      statesDisplay.draw();  
      mapDisplay.draw();
   }
-
  }
  
  
@@ -96,12 +100,18 @@ void draw(){
  
  public void update(){
    
-   /*
+   
    if(myport.available() > 0){
      readDataFromArduino();
    }
-   */
    
+   
+    if(renderBegin == 0) {
+      renderBegin = millis();
+      DEPLOY_TIME += renderBegin;
+    }
+   
+    deploymentTimer = millis() - renderBegin;
   
  }
  

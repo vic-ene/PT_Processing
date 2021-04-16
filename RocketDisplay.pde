@@ -162,7 +162,7 @@ void draw(){
       rz += random(-1,1.2)/100.0;
       float zLim = 0.75;
       if(rz > zLim) rz = zLim;
-      if (deploymentTimer > (DEPLOY_TIME) && a != 1){
+      if (millis() > 25000 && a != 1){
         a = 1;
         statesDisplay.parachuteState.switchState();
       }

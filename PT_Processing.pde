@@ -1,7 +1,7 @@
 import processing.serial.*;
 
 
-
+private SetupDisplay setupDisplay;
 public GraphsDisplay graphsDisplay;
 public RocketDisplay rocketDisplay;  
 public StatesDisplay statesDisplay;
@@ -15,52 +15,44 @@ public static final int TEMP_COMPONENT = 0,
                         STRAIN_COMPONENT = 1,
                         ACC_COMPONENT = 2;
 
+// used for data calculation and treatment
 static float factor = 5.0/1024.0;
 static float HT = 150.0, LT = -50.0;
 
-public float deploymentTimer;
-public float DEPLOY_TIME = 25000;
-public float renderBegin = 0;
 
-color backgroundColor = color(230,242,255);
-
-Serial myport;
-PrintWriter file;
-String filename = "values.txt";
-
-static int relevantValues = 4;
-static int numberOfValues = 6;
-
+// Used to connect to arduino and fix problems
+public Serial port;
+int relevantValues = 4;
+int numberOfValues = 6;
 long addedValues = 0;
 int parasiteValues = numberOfValues * 7 + 1;
 
+
+// Used to Save inside txt file on computer
+PrintWriter file;
+String filename = "values.txt";
+
+
+
+color backgroundColor = color(230,242,255);
 
 
 
 
 void setup() {
-  
    size(1200, 800, P3D);
-   frameRate(60);
+   
+   setupDisplay = new SetupDisplay(this);
+   graphsDisplay = new  GraphsDisplay(this);
+   rocketDisplay = new RocketDisplay(this);
+   statesDisplay = new StatesDisplay();
+   mapDisplay = new MapDisplay(1000,600,400,400);
  
- 
- 
- 
- 
-  graphsDisplay = new  GraphsDisplay(this);
-  rocketDisplay = new RocketDisplay(this);
-  statesDisplay = new StatesDisplay();
-  mapDisplay = new MapDisplay(1000,600,400,400);
   
-  statesDisplay.damageState.switchState();
+   file = createWriter(filename);
+   
   
-  file = createWriter(filename);
-  
-  // Arduino setup
-  String portName = Serial.list()[1];
-  myport = new Serial(this, portName, 9600);
-  myport.bufferUntil('\n');
-  
+ 
 
  
  
@@ -70,54 +62,52 @@ void setup() {
 void draw(){
   
   
-
-  update();
   
-  // Draws the background and the lines
-  if(!graphsDisplay.priority){
-     background(backgroundColor);
-     fill(0);
-     line(width/3,0,width/3,height);
-     line(2 * width/3,0, 2 * width/3,height);
-     line(0,height/2,width,height/2);
-  }
+  
+  // we draw the live dispay
+  if(setupDisplay.finished){
+    update();
+  
+    // Draws the background and the lines
+    if(!graphsDisplay.priority){
+       background(backgroundColor);
+       fill(0);
+       line(width/3,0,width/3,height);
+       line(2 * width/3,0, 2 * width/3,height);
+       line(0,height/2,width,height/2);
+    }
  
  
-  // if we made a plot fullscreen we will only draw it
-  if(graphsDisplay.priority){
-     graphsDisplay.draw();
+    // if we made a plot fullscreen we will only draw it
+    if(graphsDisplay.priority){
+       graphsDisplay.draw();
+    }
+    else{
+       graphsDisplay.draw();
+       rocketDisplay.draw();
+       statesDisplay.draw();  
+       mapDisplay.draw();
+    }
   }
+  // we draw the settings (for the app)
   else{
-     graphsDisplay.draw();
-     rocketDisplay.draw();
-     statesDisplay.draw();  
-     mapDisplay.draw();
-  }
- }
- 
- 
-
- 
- public void update(){
+      setupDisplay.draw();
+    
+  }}public void update(){
    
    
-   if(myport.available() > 0){
+   if(port.available() > 0){
      readDataFromArduino();
    }
    
    
-    if(renderBegin == 0) {
-      renderBegin = millis();
-      DEPLOY_TIME += renderBegin;
-    }
-   
-    deploymentTimer = millis() - renderBegin;
+  
   
  }
  
  void readDataFromArduino(){
    // We recover the String which contains all values
-  String val = myport.readStringUntil('\n');
+  String val = port.readStringUntil('\n');
   
   if(val == null) return;
   
@@ -126,11 +116,7 @@ void draw(){
   // We check if values has the right length (problems can occur when code just launched)
   int goodNumberOfValues = relevantValues * numberOfValues;
   
-  /*
-  s("------------------------------------------------");
-  println(values.length + " length of the array with values: should be " + goodNumberOfValues);
-  println(val);
-  */
+
   
   
   
@@ -162,12 +148,20 @@ void draw(){
    }  
  }
  
+  public void openPort(int portNumber){
+     println(portNumber);
+     String portName = Serial.list()[portNumber];
+     println(portName);
+     port = new Serial(this, portName, 9600);
+     port.bufferUntil('\n');
+  }
 
 
 void mousePressed(){
-  graphsDisplay.mousePressed();
+  setupDisplay.mousePressed();
   mapDisplay.mousePressed();
   statesDisplay.mousePressed();
+
 }
 
 void mouseReleased(){

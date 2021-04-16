@@ -30,6 +30,7 @@ public class StatesDisplay{
       statesDisplay.add(newStateDisplay);
     }
     
+    damageState.switchState();
     
   
   } 
